@@ -17,9 +17,9 @@ def describe(project: cmf.project, out):
     :param out: filelike object
     :return: None
     """
-    out.write('{}\n'.format(project))
+    out.write('Project: {}\n'.format(project))
 
-    out.write("\nDescription of Cells\n")
+    out.write("\nCells:\n")
     for cell in project:
         out.write('\t- {}:\n'.format(cell))
         for storage in cell.storages:
@@ -27,37 +27,32 @@ def describe(project: cmf.project, out):
             for connection in storage.connections:
                 out.write('\t\t\t- {}\n'.format(connection))
 
-    out.write("\nDescription of Meteo Stations\n")
+    out.write("\nMeteo Stations:\n")
 
     # ### Is there a smarter way to do this?
+    # P: Yes see below
     # Definition of all possible timeseries in meteo station
-    variables = ["T", "Tmax", "Tmin", "Tground", "Windspeed", "rHmean",
-                 "rHmin", "rHmax", "Tdew", "Sunshine", "Rs", "T_lapse"]
-
     for meteo in project.meteo_stations:
         out.write("\t- {}:\n".format(meteo))
-        for timeseries in variables:
-            timeseries_object = eval("meteo." + timeseries)
-            out.write("\t\t- {}\n".format(timeseries_object))
-            # Breaks if the timeseries does not exist. Therefore try; except
-            try:
+        data_dict = meteo.TimeseriesDictionary()
+        for variablename, timeseries in data_dict.items():
+            if timeseries:
+                out.write("\t\t{}:{}\n".format(variablename, timeseries))
+                # Breaks if the timeseries does not exist. Therefore try; except
                 mean_val = timeseries_object.mean()
                 min_val = timeseries_object.min()
                 max_val = timeseries_object.max()
-            except IndexError:
-                mean_val = "NA"
-                min_val = "NA"
-                max_val = "NA"
+                out.write("\t\t\t- Mean: {}\tMin: {}\tMax: {}\n".format(
+                    mean_val, min_val, max_val
+                ))
+            else:
+                out.write("\t\t{}: ~".format(variablename)
 
-            out.write("\t\t\t- Mean: {}\tMin: {}\tMax: {}\n".format(
-                mean_val, min_val, max_val
-            ))
-
-    out.write("\nDescription of Rain Stations\n")
+    out.write("\nRain Stations:\n")
     for rain in project.rainfall_stations:
         out.write("\t- {}:\n".format(rain))
 
-    out.write("\nDescription of Outlets\n")
+    out.write("\nOutlets:\n")
     for outlet in project.nodes:
         out.write("\t- {}:\n".format(outlet))
 
